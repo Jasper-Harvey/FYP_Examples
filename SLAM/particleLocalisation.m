@@ -27,18 +27,20 @@ beam_angles = [-pi/2:pi/10:pi/2];
 maxrange = 200;
 robo_pose = [5;6;2*pi/180]; % actual robot position to be estimated.
 
+load inputs.mat;
 %% Localisation loop:
 T = 340; % Final time
 map_display = occupancyMap(map.occ_map,1);
 probs = zeros(1,n_p);
 c =1; 
-for t=1:0.1:T  
+for t=1:0.1:length(inputs)  
     tic
     % New pose
-    if mod(t,1) == 0
-        input = robotInputs(t) + [0.01; 0.01;0.003].*randn(3,1);
-    end
-    robo_pose = stateTransition(robo_pose, input, delta_t);
+%     if mod(t,1) == 0
+%         input = robotInputs(t) + [0.01; 0.01;0.003].*randn(3,1);
+%     end
+%     robo_pose = stateTransition(robo_pose, input, delta_t);
+    robo_pose = stateTran(robo_pose, inputs(round(t/0.1 - 9,0),:), 0.5);
     
     robot_trajectory(:,round(t/0.1 - 9,0)) = robo_pose;
     
@@ -143,3 +145,10 @@ ax.FontSize = 14
 ylabel("$$\theta$$ (rad)", "FontSize",20, Interpreter='latex')
 xlabel("time (sec)", "FontSize",20, Interpreter='latex')
 
+
+
+function nextState = stateTran(x, u, dt)
+    nextState(1) = x(1) + dt*(u(1) + u(2))*sin(x(3));
+    nextState(2) = x(2) + dt*(u(1) + u(2))*cos(x(3));
+    nextState(3) = x(3) + dt*(u(1) - u(2));
+end
